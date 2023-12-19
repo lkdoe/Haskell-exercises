@@ -1,3 +1,5 @@
+import Data.List (delete)
+
 isittrue x = if x
     then "Yes"
     else "No"
@@ -15,3 +17,12 @@ primefactors n = factor n primes
             | p * p > n     = [n]
             | mod n p == 0  = p : factor (div n p) (p:ps)
             | otherwise     = factor n ps
+
+unionOfTwoLists :: Eq a => [a] -> [a] -> [a]
+unionOfTwoLists xss@(x:xs) ys
+    | xss == ys     = xss
+    | null ys       = xss
+    | null xss      = ys
+    | null xs       = if x `elem` ys then ys else x : ys
+    | x `elem` ys   = x : unionOfTwoLists xs (delete x ys)
+    | otherwise     = x : unionOfTwoLists xs ys
