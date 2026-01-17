@@ -1,0 +1,25 @@
+cabal-version:      3.12
+name:               week01-intro
+version:            0.1.0.0
+-- synopsis:
+-- description:
+license:            NONE
+author:             Unknown
+maintainer:         Unknown
+-- copyright:
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+-- extra-source-files:
+
+common warnings
+    ghc-options: -Wall
+
+executable week01-intro
+    import:           warnings
+    main-is:          Main.hs
+    other-modules:
+        Homework01
+    -- other-extensions:
+    build-depends:    base ^>=4.18.3.0
+    hs-source-dirs:   src, app
+    default-language: Haskell2010
