@@ -1,0 +1,8 @@
+dist/
+dist-newstyle/
+cabal.project.local
+*.hi
+*.o
+*.exe
+.stack-work/
+*.swp
