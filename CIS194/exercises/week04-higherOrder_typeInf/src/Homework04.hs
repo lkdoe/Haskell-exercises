@@ -64,3 +64,35 @@ insertNode a old@(Node h l n r)
     | otherwise = Node h' l n (insertNode a r)
   where
     h' = treeHeight (insertNode a old)
+
+-- Exercise 3: More folds!
+-- 1. Implement xor :: [Bool]-> Bool using a fold
+-- xor [False, True, False] == True
+-- xor [False, True, False, False, True] == False
+xor :: [Bool] -> Bool
+xor = foldr binXor False
+  where
+    binXor p q = (p || q) && not (p && q)
+
+-- 2. Implement map as a fold.
+-- Reminder:
+-- foldr f z [a,b,c] == a `f` (b `f` (c `f` z)) == f a (f b (f c z))
+-- map f [a,b,c] == [f(a),f(b),f(c)]
+map' :: (a -> b) -> [a] -> [b]
+map' f = foldr ((:) . f) []
+
+-- 3. (Optional) Implement foldl using foldr
+-- myFoldl :: (a -> b -> a) -> a -> [b] -> a
+-- myFoldl f base xs = foldr ...
+--
+-- foldr f base [a,b,c] == f a (f b (f c base))
+-- foldl f base [a,b,c] == f (f (f base a) b) c
+myFoldl' :: (a -> b -> a) -> a -> [b] -> a
+myFoldl' f base bb =
+    let bbInv = reverse bb
+     in case bbInv of
+            [] -> base
+            (b : bs) -> f (myFoldl' f base (reverse bs)) b
+
+myFoldl :: (a -> b -> a) -> a -> [b] -> a
+myFoldl f base xs = foldr (flip f) base (reverse xs)
