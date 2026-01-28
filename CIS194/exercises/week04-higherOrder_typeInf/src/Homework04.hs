@@ -65,7 +65,7 @@ insertNode a old@(Node h l n r)
   where
     h' = treeHeight (insertNode a old)
 
--- Exercise 3: More folds!
+-- # Exercise 3: More folds!
 -- 1. Implement xor :: [Bool]-> Bool using a fold
 -- xor [False, True, False] == True
 -- xor [False, True, False, False, True] == False
@@ -94,5 +94,30 @@ myFoldl' f base bb =
             [] -> base
             (b : bs) -> f (myFoldl' f base (reverse bs)) b
 
+-- The use of flip was a suggestion from hls. bschwb on github had a point free version:
+-- myFoldl f x = foldr (flip f) x . reverse
 myFoldl :: (a -> b -> a) -> a -> [b] -> a
 myFoldl f base xs = foldr (flip f) base (reverse xs)
+
+-- # Exercise 4: Finding primes
+-- Sieve of Sundaram. Steps:
+-- Take [1..n]
+-- remove all x == i+j+(2*i*j) where 1<=i<=j and i+j+(2*i*j) <= n
+-- map (\x -> 2*x+1)
+
+-- This function for computing the cartesian product was given in the exercise text:
+cartProd :: [a] -> [b] -> [(a, b)]
+cartProd xs ys = [(x, y) | x <- xs, y <- ys]
+
+-- Scribbles and intermediary steps while thinking about constructing a solution
+removeFromList :: (Eq a) => a -> [a] -> [a]
+removeFromList x ys = [y | y <- ys, y /= x]
+
+remove :: (Eq a) => a -> [a] -> [a]
+remove a = filter (/= a)
+
+filterNumbers :: Integer -> [Integer]
+filterNumbers n = [i + j + (2 * i * j) | i <- [1 .. n], j <- [i .. n], (i + j + (2 * i * j)) <= n]
+
+sieveSundaram :: Integer -> [Integer]
+sieveSundaram n = map (\x -> x * 2 + 1) $ filter (`notElem` filterNumbers n) [1 .. n]
