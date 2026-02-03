@@ -1,7 +1,10 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
 module Calc where
 
+import qualified Data.Map as M
+import Data.Maybe (fromMaybe)
 import ExprT
 import Parser (parseExp)
 import StackVM
@@ -92,9 +95,58 @@ instance Expr StackVM.Program where
     add n1 n2 = n1 ++ n2 ++ [StackVM.Add]
     mul n1 n2 = n1 ++ n2 ++ [StackVM.Mul]
 
+-- To avoid name collisions with the constructors of ExprT:
+-- Unfortunately, this turned out not to work when compiling the StackVM.Program.
+-- However, when directly passing the output to the stackVM for execution,
+-- it worked fine. The qualified name of the constructor simply is left out when printing it.
+litStack :: Integer -> Program
+litStack n = [StackVM.PushI n]
+addStack :: Program -> Program -> Program
+addStack n1 n2 = n1 ++ n2 ++ [StackVM.Add]
+mulStack :: Program -> Program -> Program
+mulStack n1 n2 = n1 ++ n2 ++ [StackVM.Mul]
+
 -- Reminder:
 -- evalStr :: String -> Maybe Integer
 -- evalStr exp = eval <$> parseExp ExprT.Lit ExprT.Add ExprT.Mul exp
 
-compile :: String -> Maybe Program
-compile ex1 = programify <$> parseExp lit add mul ex1
+compile :: String -> Maybe StackVM.Program
+-- compile ex1 = programify <$> parseExp litStack addStack mulStack ex1
+compile = parseExp litStack addStack mulStack
+
+-- # Exercise 6
+class HasVars a where
+    var :: String -> a
+
+data VarExprT
+    = VLit Integer
+    | VAdd VarExprT VarExprT
+    | VMul VarExprT VarExprT
+    | VVar String
+    deriving (Show, Eq)
+
+instance Expr VarExprT where
+    lit = VLit
+    add = VAdd
+    mul = VMul
+instance HasVars VarExprT where
+    var = VVar
+
+-- This takes a variable name s and returns a function from a Map to Maybe Integer.
+-- The function takes a Map and returns from it Just the value for the given name or Nothing.
+instance HasVars (M.Map String Integer -> Maybe Integer) where
+    var = M.lookup
+
+instance Expr (M.Map String Integer -> Maybe Integer) where
+    lit i = \_ -> Just i
+    add e1 e2 = \m -> case (e1 m, e2 m) of
+        (Just i, Just j) -> Just (i + j)
+        _ -> Nothing
+    mul e1 e2 = \m -> case (e1 m, e2 m) of
+        (Just i, Just j) -> Just (i * j)
+        _ -> Nothing
+
+withVars :: [(String, Integer)] -> (M.Map String Integer -> Maybe Integer) -> Maybe Integer
+withVars vs exp = exp $ M.fromList vs
+
+dict = M.fromList [("a", 1), ("b", 2)]
