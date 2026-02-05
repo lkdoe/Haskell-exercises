@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC-fno-warn-missing-methods #-}
 module Fibonacci where
 
 -- # Exercise 1
@@ -79,3 +80,44 @@ rule i
 
 --------------------------------------------------
 -- # Exercise 6
+-- "optional but very cool" Fibonacci numbers via generating functions
+x :: Stream Integer
+x = Cons 0 (Cons 1 (streamRepeat 0))
+
+instance Num (Stream Integer) where
+    fromInteger n = Cons n (streamRepeat 0)
+    negate = fmap (* (-1))
+    (+) (Cons a as) (Cons b bs) = Cons (a + b) (as + bs)
+    (*) (Cons a as) bb@(Cons b bs) = Cons (a * b) (fmap (* a) bs + as * bb)
+
+-- Important: To keep all the entries as Integer, use the div function.
+-- (/) would turn the fraction of Intergers a and b (a/b) into a Float.
+instance Fractional (Stream Integer) where
+    (/) aa@(Cons a as) bb@(Cons b bs) = Cons (div a b) ((`div` b) <$> (as - ((aa / bb) * bs)))
+
+-- If F(x) = F_0 + F_1*x + F_2*x^2 + ... with Fn being the n-th Fibonacci number,
+-- then F_(n+2) == F_n + F_(n+1) and thus F = 0 + 1*x + F*x + F*X^2.
+-- It follows that x = F - xF - (x^2)F, or F = x/(1-x-x^2)
+
+fibs3 :: Stream Integer
+fibs3 = x / (1 - x - (x ^ 2))
+
+--------------------------------------------------
+-- # Exercise 7
+data Matrix = Matrix Integer Integer Integer Integer deriving (Show)
+
+instance Num Matrix where
+    (*) (Matrix a11 a12 a21 a22) (Matrix b11 b12 b21 b22) =
+        Matrix
+            (a11 * b11 + a12 * b21)
+            (a11 * b12 + a12 * b22)
+            (a21 * b11 + a22 * b21)
+            (a21 * b12 + a22 * b22)
+
+fBase = Matrix 1 1 1 0
+
+fib4 :: Integer -> Integer
+fib4 0 = 0
+fib4 n = go (fBase ^ n)
+  where
+    go (Matrix _ a _ _) = a
